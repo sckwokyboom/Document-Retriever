@@ -6,6 +6,7 @@ from PyPDF2 import PdfReader
 from docx import Document
 from sentence_transformers import SentenceTransformer
 from colpali_engine.models import ColQwen2, ColQwen2Processor
+from colpali_engine.utils.torch_utils import get_torch_device
 from peft import LoraConfig
 from transformers.models.qwen2_vl import Qwen2VLForConditionalGeneration, Qwen2VLProcessor
 from qwen_vl_utils import process_vision_info
