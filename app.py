@@ -12,13 +12,16 @@ from pdf2image import convert_from_path
 # Настройка устройства
 device = get_torch_device('auto')
 model_name = 'vidore/colqwen2-v1.0'
+# local_model_path = "/path/to/your/local/model"
+# TODO: remove it
+local_model_path = "/home/meno/models/colqwen2-v1.0"
 
 # Модели и процессоры
 text_embedder = SentenceTransformer('intfloat/multilingual-e5-large')
-lora_config = LoraConfig.from_pretrained(model_name)
-processor_retrieval = ColQwen2Processor.from_pretrained(model_name)
+lora_config = LoraConfig.from_pretrained(local_model_path)
+processor_retrieval = ColQwen2Processor.from_pretrained(local_model_path)
 processor_generation = Qwen2VLProcessor.from_pretrained(lora_config.base_model_name_or_path)
-model = ColQwen2ForRAG.from_pretrained(model_name, torch_dtype=torch.float16, device_map=device)
+model = ColQwen2ForRAG.from_pretrained(local_model_path, torch_dtype=torch.float16, device_map=device)
 
 
 # Функции обработки файлов
