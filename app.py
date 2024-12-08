@@ -160,9 +160,6 @@ if uploaded_files:
 query = st.text_input("Enter your query")
 num_results = st.slider("Number of retrieved pages", 1, 10, 3)
 
-query = st.text_input("Enter your query")
-num_results = st.slider("Number of retrieved pages", 1, 10, 3)
-
 if st.button("Search"):
     if document_data:
         for doc_name, data in document_data.items():
