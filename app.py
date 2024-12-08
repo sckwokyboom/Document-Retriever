@@ -5,8 +5,11 @@ from PIL import Image
 from PyPDF2 import PdfReader
 from docx import Document
 from sentence_transformers import SentenceTransformer
-from vidore.colqwen2 import ColQwen2ForRAG, ColQwen2Processor, Qwen2VLProcessor, LoraConfig
-from vidore.utils import get_torch_device
+from colpali_engine.models import ColQwen2, ColQwen2Processor
+from peft import LoraConfig
+from transformers.models.qwen2_vl import Qwen2VLForConditionalGeneration, Qwen2VLProcessor
+from qwen_vl_utils import process_vision_info
+from sentence_transformers import SentenceTransformer
 from pdf2image import convert_from_path
 
 # Настройка устройства
