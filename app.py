@@ -25,6 +25,60 @@ text_embedder = SentenceTransformer('intfloat/multilingual-e5-large')
 lora_config = LoraConfig.from_pretrained(local_model_path)
 processor_retrieval = ColQwen2Processor.from_pretrained(local_model_path)
 processor_generation = Qwen2VLProcessor.from_pretrained(lora_config.base_model_name_or_path)
+
+
+class ColQwen2ForRAG(ColQwen2):
+    """
+    ColQwen2 model implementation that can be used both for retrieval and generation.
+    Allows switching between retrieval and generation modes.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_retrieval_enabled = True
+
+    def forward(self, *args, **kwargs) -> Any:
+        """
+        Forward pass that calls either Qwen2VLForConditionalGeneration.forward for generation
+        or ColQwen2.forward for retrieval based on the current mode.
+        """
+        if self.is_retrieval_enabled:
+            return ColQwen2.forward(self, *args, **kwargs)
+        else:
+            return Qwen2VLForConditionalGeneration.forward(self, *args, **kwargs)
+
+    def generate(self, *args, **kwargs):
+        """
+        Generate text using Qwen2VLForConditionalGeneration.generate.
+        """
+        if not self.is_generation_enabled:
+            raise ValueError(
+                'Set the model to generation mode by calling `enable_generation()` before calling `generate()`.')
+        return super().generate(*args, **kwargs)
+
+    @property
+    def is_retrieval_enabled(self) -> bool:
+        return self._is_retrieval_enabled
+
+    @property
+    def is_generation_enabled(self) -> bool:
+        return not self.is_retrieval_enabled
+
+    def enable_retrieval(self) -> None:
+        """
+        Switch to retrieval mode.
+        """
+        self.enable_adapters()
+        self._is_retrieval_enabled = True
+
+    def enable_generation(self) -> None:
+        """
+        Switch to generation mode.
+        """
+        self.disable_adapters()
+        self._is_retrieval_enabled = False
+
+
 model = ColQwen2ForRAG.from_pretrained(local_model_path, torch_dtype=torch.float16, device_map=device)
 
 
