@@ -155,7 +155,7 @@ if uploaded_files:
     for file in uploaded_files:
         is_valid, extension = validate_file_format(file)
         if not is_valid:
-            st.error(f"Unsupported file format: {file.name}. Please upload only PDF or DOC files.")
+            st.error(f"Unsupported file format: {file.name}")
             continue
 
         if extension == "pdf":
@@ -163,13 +163,13 @@ if uploaded_files:
         elif extension in ["doc", "docx"]:
             images, texts = process_doc(file)
         else:
-            continue  # Это не должно происходить, так как проверка выше фильтрует недопустимые форматы
+            continue
 
         document_data[file.name] = {"images": images, "texts": texts}
-    if document_data:
-        st.success(f"Successfully uploaded and processed {len(document_data)} document(s).")
 
-# Поиск
+    if document_data:
+        st.success(f"Successfully uploaded {len(document_data)} document(s).")
+
 query = st.text_input("Enter your query")
 num_results = st.slider("Number of retrieved pages", 1, 10, 3)
 
@@ -179,30 +179,28 @@ if st.button("Search"):
             page_texts = data["texts"]
             page_images = data["images"]
 
-            # Ретривер
             query_embedding = text_embedder.encode([f"query: {query}"])
             page_embeddings = text_embedder.encode([f"passage: {text}" for text in page_texts])
             similarities = query_embedding @ page_embeddings.T
             top_indices = sorted(range(len(similarities[0])), key=lambda i: -similarities[0][i])[:num_results]
 
             retrieved_texts = [page_texts[i] for i in top_indices]
-            retrieved_images = [scale_image(page_images[i], 512) for i in top_indices] if page_images else []
+            retrieved_images = [scale_image(page_images[i]) for i in top_indices if page_images]
 
-            # Генерация ответа
             united_retrieved_doc = "\n".join(retrieved_texts)
             conversation = [
                 {
                     "role": "system",
                     "content": [
                         {"type": "text",
-                         "text": "Вы - эксперт по российской промышленности. Отвечайте на вопросы точно и полно."}
+                         "text": "You are an AI assistant for document analysis."}
                     ]
                 },
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": f"Документ:\n{united_retrieved_doc}"},
-                        {"type": "text", "text": f"Вопрос:\n{query}"}
+                        {"type": "text", "text": f"Document:\n{united_retrieved_doc}"},
+                        {"type": "text", "text": f"Query:\n{query}"}
                     ]
                 }
             ]
@@ -221,7 +219,6 @@ if st.button("Search"):
 
             generated_text = processor_generation.batch_decode(output_ids, skip_special_tokens=True)[0]
 
-            # Результаты
             st.write(f"**Document:** {doc_name}")
             st.write(f"**Query:** {query}")
             st.write(f"**Generated Answer:** {generated_text}")
