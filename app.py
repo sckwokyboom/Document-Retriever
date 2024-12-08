@@ -1,5 +1,5 @@
 import os
-from typing import Any
+from typing import Any, List, cast
 
 import torch
 import streamlit as st
@@ -81,7 +81,14 @@ class ColQwen2ForRAG(ColQwen2):
         self._is_retrieval_enabled = False
 
 
-model = ColQwen2ForRAG.from_pretrained(local_model_path, torch_dtype=torch.float16, device_map=device)
+model = cast(
+    ColQwen2ForRAG,
+    ColQwen2ForRAG.from_pretrained(
+        local_model_path,
+        torch_dtype=torch.float16,  # torch.bfloat16
+        device_map=device,
+    ),
+)
 
 
 # Функции обработки файлов
