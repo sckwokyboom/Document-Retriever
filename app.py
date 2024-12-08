@@ -205,13 +205,25 @@ if st.button("Search"):
                 }
             ]
 
-            image_inputs = processor_retrieval.process_images(retrieved_images).to(device) if retrieved_images else None
+            if retrieved_images:
+                image_inputs = processor_retrieval.process_images(retrieved_images)
+                if image_inputs.device.type == "meta":
+                    image_inputs = image_inputs.to_empty(device)
+                else:
+                    image_inputs = image_inputs.to(device)
+            else:
+                image_inputs = None
+
             inputs_generation = processor_generation(
                 text=[processor_generation.apply_chat_template(conversation, add_generation_prompt=True)],
                 images=image_inputs,
                 padding=True,
                 return_tensors="pt",
-            ).to(device)
+            )
+            if inputs_generation.device.type == "meta":
+                inputs_generation = inputs_generation.to_empty(device)
+            else:
+                inputs_generation = inputs_generation.to(device)
 
             model.enable_generation()
             with torch.no_grad():
