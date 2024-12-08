@@ -1,4 +1,6 @@
 import os
+from typing import Any
+
 import torch
 import streamlit as st
 from PIL import Image
