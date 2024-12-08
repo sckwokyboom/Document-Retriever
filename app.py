@@ -1,4 +1,5 @@
 import os
+from tempfile import NamedTemporaryFile
 from typing import Any, List, cast
 
 import torch
@@ -92,12 +93,24 @@ model = cast(
 
 
 # Функции обработки файлов
-def process_pdf(pdf_path):
-    """Извлекает текст и изображения из PDF."""
-    reader = PdfReader(pdf_path)
-    page_texts = [page.extract_text() for page in reader.pages]
-    images = convert_from_path(pdf_path)
-    return images, page_texts
+def process_pdf(uploaded_file):
+    # Сохраните загруженный файл во временный файл
+    with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+        temp_file.write(uploaded_file.getbuffer())
+        temp_file_path = temp_file.name
+
+    try:
+        # Извлечение текста из PDF
+        reader = PdfReader(temp_file_path)
+        texts = [page.extract_text() for page in reader.pages]
+
+        # Конвертация страниц PDF в изображения
+        images = convert_from_path(temp_file_path)
+
+        return images, texts
+    finally:
+        # Удаляем временный файл
+        os.remove(temp_file_path)
 
 
 def process_doc(doc_path):
